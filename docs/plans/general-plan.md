@@ -96,7 +96,7 @@ Every app starts with the same setup. It's deliberately small: nothing here need
 | Smoke test | `scripts/ping.ts` ✍️, run with `npm run ping`: one `generateText` call that prints the text, `usage`, `finishReason` and the estimated cost; `.env.local` loaded with Node's built-in `--env-file` (`tsx --env-file=.env.local scripts/ping.ts`, so no `dotenv`); an optional argument picks the model (`npm run ping -- demo`) |
 | Scripts | `dev`, `build`, `start`, `lint`, `typecheck`, `format`, `format:check`, `test`, `test:watch`, `ping` |
 | CI | GitHub Actions on push and pull request: `npm ci`, then `format:check`, `lint`, `typecheck`, `test`, `build`. No API keys needed |
-| Claude Code | A short `CLAUDE.md` (see below) and `.claude/settings.json` denying reads of `.env` and `.env.*` |
+| Claude Code | A short `AGENTS.md` with the project instructions (see below), `CLAUDE.md` containing only `@AGENTS.md`, `agentRules: false` in `next.config.ts` (so `next dev` doesn't re-insert its Next.js block), and `.claude/settings.json` denying reads of `.env` and `.env.*` |
 | Versions | Exact versions pinned (`save-exact=true` in `.npmrc`), `package-lock.json` committed |
 
 **Not in the boilerplate:** Zod env validation, `server-only` wrappers, module folders, import-boundary lint rules, a `shared/` folder. If an app ever needs one of these, its app plan adds it.
@@ -113,15 +113,16 @@ Every app starts with the same setup. It's deliberately small: nothing here need
 │   └── lib/
 │       ├── ai/             ← models.ts, cost.ts and the app's AI code (prompts, schemas, tools)
 │       └── utils.ts
-├── CLAUDE.md
+├── AGENTS.md               ← project instructions for coding agents
+├── CLAUDE.md               ← just `@AGENTS.md`
 ├── NOTES.md                ← learning notes and interview talking points
 └── .claude/settings.json
 ```
 
-### CLAUDE.md contents
+### AGENTS.md contents
 
 - **Project:** one paragraph on what the app does, with links to `docs/plans/general-plan.md` and `docs/plans/<app>-plan.md`.
-- **Stack:** Next.js 16, AI SDK 7, Zod, shadcn/ui, Tailwind, npm, Node 24. These may be newer than the model's training data, so check installed versions and the current docs. The AI SDK docs for the installed version are in `node_modules/ai/docs/`; AI SDK 7 renamed several APIs (see the table in the app plan).
+- **Stack:** Next.js 16, AI SDK 7, Zod, shadcn/ui, Tailwind, npm, Node 24. These may be newer than the model's training data, so check installed versions and the current docs. The docs for the installed versions are in `node_modules/next/dist/docs/` (Next.js) and `node_modules/ai/docs/` (AI SDK); AI SDK 7 renamed several APIs (see the table in the app plan).
 - **Commands:** `npm run dev`, `build`, `lint`, `typecheck`, `test`, `ping`. Run `npm run lint && npm run typecheck && npm test` before saying you're done.
 - **Rules:** never read `.env*` files; use Haiku for all dev calls; use npm and ask before adding dependencies; name models only in `src/lib/ai/models.ts`.
 - **Learning mode:** work on the task I name. ✍️ tasks are mine by default: review my code or answer questions instead of writing it, unless I ask you to write it. For bigger 🤖 tasks, show a plan first.
@@ -134,13 +135,13 @@ Use this as task 0 of App 1 and App 2. The folder already contains `docs/plans/`
 Set up the common boilerplate from section 4 of docs/plans/general-plan.md in this repo.
 - The repo already has docs/plans/ and .git. Keep docs/ untouched.
 - create-next-app (latest, --use-npm) in the current folder: TypeScript, App Router, ESLint, Tailwind CSS, src/ directory, import alias @/*.
-- shadcn/ui: `npx shadcn@latest init --base base --preset nova` with default paths; add button, card, textarea, badge, sonner and mount <Toaster /> in the root layout.
+- shadcn/ui: `npx shadcn@latest init --base base --preset nova` with default paths; add button, card, textarea, badge, sonner and mount <Toaster /> in the root layout. Check that the root layout's sans font variable matches `--font-sans` in globals.css.
 - Prettier and .prettierignore exactly as described in section 4, then format the whole repo once (docs/plans/ is ignored).
 - Vitest (node environment, @/* alias via resolve.tsconfigPaths), with one trivial passing test.
 - Install ai, @ai-sdk/anthropic and zod. Create src/lib/ai/models.ts with the dev and demo model IDs. Create .env.example and make sure .env.local is ignored and .env.example isn't.
 - Leave src/lib/ai/cost.ts and scripts/ping.ts to me (✍️), but add the "ping" script to package.json.
-- Scripts, CI workflow, .nvmrc, engines, .npmrc and pinned versions as described in section 4.
-- CLAUDE.md with the contents from section 4 (keep the @AGENTS.md line create-next-app generates at the top), and .claude/settings.json denying Read(.env) and Read(.env.*).
+- Scripts, CI workflow, .nvmrc, engines, .npmrc and pinned versions as described in section 4. Put @types/node on the Node 24 line (create-next-app installs ^20, which conflicts with Vitest 5).
+- AGENTS.md with the contents from section 4 (replacing the Next.js block create-next-app generates), CLAUDE.md containing only `@AGENTS.md`, `agentRules: false` in next.config.ts, and .claude/settings.json denying Read(.env) and Read(.env.*).
 - Home page: the app name and a one-line description.
 AI SDK 7 and Next.js 16 may be newer than you know: check installed versions and current docs. Show me the plan first. When done, run format:check, lint, typecheck, test and build.
 ```
