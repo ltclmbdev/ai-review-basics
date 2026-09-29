@@ -89,12 +89,12 @@ Every app starts with the same setup. It's deliberately small: nothing here need
 | UI | Tailwind CSS, shadcn/ui (Base UI, `nova` preset, neutral, CSS variables) with its default paths (`@/components/ui`, `@/lib/utils`); button, card, textarea, badge and sonner (with `<Toaster />` in the root layout) |
 | Formatting | Prettier: no semicolons, single quotes, `printWidth` 80, `trailingComma: 'es5'`, `arrowParens: 'always'`; `@trivago/prettier-plugin-sort-imports` (`react`/`next` → third-party → `@/components/ui/*` → other `@/*` → relative) and `prettier-plugin-tailwindcss` (last, with `tailwindStylesheet: './src/app/globals.css'` and `tailwindFunctions: ['cn', 'cva']`). `.prettierignore`: build output, `node_modules`, `public`, lockfiles, logs, `next-env.d.ts` and `docs/plans/` (plans are replaced whole, never reformatted) |
 | Linting | The ESLint config `create-next-app` generates, unchanged |
-| Tests | Vitest, node environment, `@/*` alias via Vite's built-in `resolve.tsconfigPaths: true` (no extra plugin); used for pure functions like the cost helper, the diff parser and eval scorers |
+| Tests | Vitest with `vitest.config.mts` (the `.mts` extension loads it as ESM without `"type": "module"`), node environment, `@/*` alias via Vite's built-in `resolve.tsconfigPaths: true` (no extra plugin); used for pure functions like the cost helper, the diff parser and eval scorers |
 | AI | `ai`, `@ai-sdk/anthropic`, `zod` |
 | Env | `.env.local` with `ANTHROPIC_API_KEY` (the Anthropic provider reads it automatically), `.env.example` with placeholders, `.env*` ignored except `.env.example`. No env validation layer |
 | AI helpers | `src/lib/ai/models.ts`: the model IDs (`dev` = Haiku 4.5, `demo` = Sonnet 5) and nothing else. `src/lib/ai/cost.ts`: a price table and `estimateCost(modelId, usage)` with a unit test ✍️ |
 | Smoke test | `scripts/ping.ts` ✍️, run with `npm run ping`: one `generateText` call that prints the text, `usage`, `finishReason` and the estimated cost; `.env.local` loaded with Node's built-in `--env-file` (`tsx --env-file=.env.local scripts/ping.ts`, so no `dotenv`); an optional argument picks the model (`npm run ping -- demo`) |
-| Scripts | `dev`, `build`, `start`, `lint`, `typecheck`, `format`, `format:check`, `test`, `test:watch`, `ping` |
+| Scripts | `dev`, `build`, `start`, `lint`, `typecheck`, `format`, `format:check`, `test`, `test:watch`, `ping`. `typecheck` is `next typegen && tsc --noEmit`: CI runs it before `build` on a fresh checkout, so the route types (`LayoutProps`, `PageProps`) must be generated first |
 | CI | GitHub Actions on push and pull request: `npm ci`, then `format:check`, `lint`, `typecheck`, `test`, `build`. No API keys needed |
 | Claude Code | A short `AGENTS.md` with the project instructions (see below), `CLAUDE.md` containing only `@AGENTS.md`, `agentRules: false` in `next.config.ts` (so `next dev` doesn't re-insert its Next.js block), and `.claude/settings.json` denying reads of `.env` and `.env.*` |
 | Versions | Exact versions pinned (`save-exact=true` in `.npmrc`), `package-lock.json` committed |
@@ -137,7 +137,7 @@ Set up the common boilerplate from section 4 of docs/plans/general-plan.md in th
 - create-next-app (latest, --use-npm) in the current folder: TypeScript, App Router, ESLint, Tailwind CSS, src/ directory, import alias @/*.
 - shadcn/ui: `npx shadcn@latest init --base base --preset nova` with default paths; add button, card, textarea, badge, sonner and mount <Toaster /> in the root layout. Check that the root layout's sans font variable matches `--font-sans` in globals.css.
 - Prettier and .prettierignore exactly as described in section 4, then format the whole repo once (docs/plans/ is ignored).
-- Vitest (node environment, @/* alias via resolve.tsconfigPaths), with one trivial passing test.
+- Vitest (vitest.config.mts, node environment, @/* alias via resolve.tsconfigPaths), with one trivial passing test.
 - Install ai, @ai-sdk/anthropic and zod. Create src/lib/ai/models.ts with the dev and demo model IDs. Create .env.example and make sure .env.local is ignored and .env.example isn't.
 - Leave src/lib/ai/cost.ts and scripts/ping.ts to me (✍️), but add the "ping" script to package.json.
 - Scripts, CI workflow, .nvmrc, engines, .npmrc and pinned versions as described in section 4. Put @types/node on the Node 24 line (create-next-app installs ^20, which conflicts with Vitest 5).
