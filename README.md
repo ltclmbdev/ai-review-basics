@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ai-review-basics
 
-## Getting Started
+Paste a diff and get a structured, streamed code review from Claude, then ask follow-up questions about it in a chat.
 
-First, run the development server:
+App 1 of 3 in a learning path covering AI SDK Core and AI SDK UI. See [docs/plans/ai-review-basics-plan.md](docs/plans/ai-review-basics-plan.md) for the plan and progress.
+
+## Stack
+
+- Next.js 16 (App Router), TypeScript, React 19
+- AI SDK 7 with the Anthropic provider (`ai`, `@ai-sdk/anthropic`) and Zod
+- shadcn/ui (Base UI), Tailwind CSS
+- Vitest, ESLint, Prettier
+- Node 24, npm
+
+## Getting started
+
+Requires Node 24 (see `.nvmrc`) and an [Anthropic API key](https://platform.claude.com/settings/keys).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # then set ANTHROPIC_API_KEY in .env.local
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Check that the key and model work with one real call:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run ping          # dev model (Haiku)
+npm run ping -- demo  # demo model (Sonnet)
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+It prints the response, token usage, finish reason, latency and estimated cost.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Script                            | What it does                          |
+| --------------------------------- | ------------------------------------- |
+| `npm run dev`                     | Start the dev server                  |
+| `npm run build` / `npm start`     | Production build and server           |
+| `npm run lint`                    | ESLint                                |
+| `npm run typecheck`               | Generate Next route types, then `tsc` |
+| `npm test` / `npm run test:watch` | Vitest, once or in watch mode         |
+| `npm run format` / `format:check` | Prettier                              |
+| `npm run ping`                    | One model call with usage and cost    |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+CI runs `format:check`, `lint`, `typecheck`, `test` and `build` on every push and pull request. It needs no API key.
