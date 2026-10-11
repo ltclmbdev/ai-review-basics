@@ -2,6 +2,8 @@
 
 import { useId, useState } from 'react'
 
+import { Loader2Icon } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -18,6 +20,7 @@ import { cn } from '@/lib/utils'
 
 type DiffInputProps = {
   onSubmit: (diff: string) => void
+  isLoading?: boolean
 }
 
 const sampleItems = samples.map((sample) => ({
@@ -27,7 +30,7 @@ const sampleItems = samples.map((sample) => ({
 
 const formatCount = (count: number) => count.toLocaleString('en-US')
 
-export const DiffInput = ({ onSubmit }: DiffInputProps) => {
+export const DiffInput = ({ onSubmit, isLoading = false }: DiffInputProps) => {
   const [diff, setDiff] = useState('')
   const [sampleId, setSampleId] = useState<string | null>(null)
   const textareaId = useId()
@@ -53,7 +56,7 @@ export const DiffInput = ({ onSubmit }: DiffInputProps) => {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (isEmpty || isTooLong) {
+    if (isEmpty || isTooLong || isLoading) {
       return
     }
     onSubmit(diff)
@@ -103,8 +106,11 @@ export const DiffInput = ({ onSubmit }: DiffInputProps) => {
           </p>
           {hint && <p id={hintId}>{hint}</p>}
         </div>
-        <Button type="submit" disabled={isEmpty || isTooLong}>
-          Review
+        <Button type="submit" disabled={isEmpty || isTooLong || isLoading}>
+          {isLoading && (
+            <Loader2Icon data-icon="inline-start" className="animate-spin" />
+          )}
+          {isLoading ? 'Reviewing…' : 'Review'}
         </Button>
       </div>
     </form>
