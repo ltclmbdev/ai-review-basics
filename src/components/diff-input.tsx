@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils'
 type DiffInputProps = {
   onSubmit: (diff: string) => void
   isLoading?: boolean
+  onStop?: () => void
 }
 
 const sampleItems = samples.map((sample) => ({
@@ -30,7 +31,11 @@ const sampleItems = samples.map((sample) => ({
 
 const formatCount = (count: number) => count.toLocaleString('en-US')
 
-export const DiffInput = ({ onSubmit, isLoading = false }: DiffInputProps) => {
+export const DiffInput = ({
+  onSubmit,
+  isLoading = false,
+  onStop,
+}: DiffInputProps) => {
   const [diff, setDiff] = useState('')
   const [sampleId, setSampleId] = useState<string | null>(null)
   const textareaId = useId()
@@ -106,12 +111,19 @@ export const DiffInput = ({ onSubmit, isLoading = false }: DiffInputProps) => {
           </p>
           {hint && <p id={hintId}>{hint}</p>}
         </div>
-        <Button type="submit" disabled={isEmpty || isTooLong || isLoading}>
-          {isLoading && (
-            <Loader2Icon data-icon="inline-start" className="animate-spin" />
+        <div className="flex gap-2">
+          {isLoading && onStop && (
+            <Button type="button" variant="outline" onClick={onStop}>
+              Stop
+            </Button>
           )}
-          {isLoading ? 'Reviewing…' : 'Review'}
-        </Button>
+          <Button type="submit" disabled={isEmpty || isTooLong || isLoading}>
+            {isLoading && (
+              <Loader2Icon data-icon="inline-start" className="animate-spin" />
+            )}
+            {isLoading ? 'Reviewing…' : 'Review'}
+          </Button>
+        </div>
       </div>
     </form>
   )

@@ -1,5 +1,9 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { generateText } from 'ai'
+import {
+  createUIMessageStreamResponse,
+  streamText,
+  toUIMessageStream,
+} from 'ai'
 
 import { estimateCost } from '@/lib/ai/cost'
 import { modelIds } from '@/lib/ai/models'
@@ -11,12 +15,12 @@ const badRequest = (error: string) => Response.json({ error }, { status: 400 })
 export async function POST(request: Request) {
   const body: unknown = await request.json().catch(() => null)
   const diff =
-    typeof body === 'object' && body !== null && 'diff' in body
-      ? body.diff
+    typeof body === 'object' && body !== null && 'prompt' in body
+      ? body.prompt
       : undefined
 
   if (typeof diff !== 'string') {
-    return badRequest('Expected a JSON body with a "diff" string.')
+    return badRequest('Expected a JSON body with a "prompt" string.')
   }
   if (diff.trim() === '') {
     return badRequest('The diff is empty.')
@@ -29,22 +33,23 @@ export async function POST(request: Request) {
 
   const modelId = modelIds.dev
 
-  try {
-    const { text, usage } = await generateText({
-      model: anthropic(modelId),
-      instructions: reviewSystemPrompt,
-      prompt: `<diff>\n${diff}\n</diff>`,
-    })
+  const result = streamText({
+    model: anthropic(modelId),
+    instructions: reviewSystemPrompt,
+    prompt: `<diff>\n${diff}\n</diff>`,
+    abortSignal: request.signal,
+    onEnd: ({ usage }) => {
+      console.log('[api/review]', { modelId, ...estimateCost(modelId, usage) })
+    },
+    onAbort: () => {
+      console.log('[api/review] aborted', { modelId })
+    },
+    onError: ({ error }) => {
+      console.error('[api/review]', error)
+    },
+  })
 
-    console.log('[api/review]', { modelId, ...estimateCost(modelId, usage) })
-
-    return Response.json({ text })
-  } catch (error) {
-    console.error('[api/review]', error)
-
-    return Response.json(
-      { error: 'The review failed. Please try again.' },
-      { status: 500 }
-    )
-  }
+  return createUIMessageStreamResponse({
+    stream: toUIMessageStream({ stream: result.stream }),
+  })
 }

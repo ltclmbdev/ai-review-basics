@@ -2,62 +2,69 @@
 
 import { useState } from 'react'
 
+import { useCompletion } from '@ai-sdk/react'
 import { toast } from 'sonner'
 
 import { DiffInput } from '@/components/diff-input'
 import { cn } from '@/lib/utils'
 
-type ReviewResponse = {
-  text?: string
-  error?: string
-}
-
 export const ReviewPanel = () => {
-  const [review, setReview] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isStopped, setIsStopped] = useState(false)
+  const { completion, complete, error, isLoading, stop } = useCompletion({
+    api: '/api/review',
+    onError: () => toast.error('The review failed. Please try again.'),
+  })
 
-  const handleSubmit = async (diff: string) => {
-    setIsLoading(true)
-    try {
-      const response = await fetch('/api/review', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ diff }),
-      })
-      const data: ReviewResponse = await response.json().catch(() => ({}))
-      if (!response.ok || data.text === undefined) {
-        toast.error(data.error ?? 'The review failed. Please try again.')
-        return
-      }
-      setReview(data.text)
-    } catch {
-      toast.error('Could not reach the server.')
-    } finally {
-      setIsLoading(false)
-    }
+  const handleSubmit = (diff: string) => {
+    setIsStopped(false)
+    complete(diff)
   }
+
+  const handleStop = () => {
+    stop()
+    setIsStopped(true)
+  }
+
+  const notice = isLoading
+    ? null
+    : error
+      ? 'This review is incomplete because it failed partway. Run it again for the full review.'
+      : isStopped
+        ? 'Review stopped. The findings above may be incomplete.'
+        : null
 
   return (
     <div className="space-y-8">
-      <DiffInput onSubmit={handleSubmit} isLoading={isLoading} />
+      <DiffInput
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+        onStop={handleStop}
+      />
       <section
         aria-label="Review results"
         aria-live="polite"
         aria-busy={isLoading}
       >
-        {review === null ? (
+        {completion === '' ? (
           <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
             {isLoading ? 'Reviewing the diff…' : 'Findings will appear here.'}
           </p>
         ) : (
-          <p
-            className={cn(
-              'rounded-lg border p-4 text-sm leading-6 whitespace-pre-wrap transition-opacity',
-              isLoading && 'opacity-60'
+          <div className="space-y-2">
+            <p className="rounded-lg border p-4 text-sm leading-6 whitespace-pre-wrap">
+              {completion}
+            </p>
+            {notice && (
+              <p
+                className={cn(
+                  'text-sm',
+                  error ? 'text-destructive' : 'text-muted-foreground'
+                )}
+              >
+                {notice}
+              </p>
             )}
-          >
-            {review}
-          </p>
+          </div>
         )}
       </section>
     </div>
